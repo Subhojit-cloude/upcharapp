@@ -1,5 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { TimeSlot as TimeSlotType } from '../../types/clinic';
 
@@ -10,50 +15,71 @@ interface TimeSlotProps {
 
 export const TimeSlot: React.FC<TimeSlotProps> = ({ slot, onPress }) => {
   const isAvailable = slot.status === 'available';
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    scale.value = withTiming(isAvailable ? 0.96 : 0.98, { duration: 100 });
+  }, [isAvailable]);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withTiming(1, { duration: 150 });
+  }, []);
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.85}
-      style={[
-        styles.slotCard,
-        isAvailable ? styles.slotCardAvailable : styles.slotCardBooked,
-      ]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={styles.pressableWrapper}
     >
-      <View style={styles.slotHeader}>
-        <Text style={[styles.slotTime, isAvailable ? styles.slotTimeAvailable : styles.slotTimeBooked]}>
-          {slot.time}
-        </Text>
-        <View
-          style={[
-            styles.slotIndicatorDot,
-            isAvailable ? styles.dotAvailable : styles.dotBooked,
-          ]}
-        />
-      </View>
+      <Animated.View
+        style={[
+          styles.slotCard,
+          isAvailable ? styles.slotCardAvailable : styles.slotCardBooked,
+          animatedStyle,
+        ]}
+      >
+        <View style={styles.slotHeader}>
+          <Text style={[styles.slotTime, isAvailable ? styles.slotTimeAvailable : styles.slotTimeBooked]}>
+            {slot.time}
+          </Text>
+          <View
+            style={[
+              styles.slotIndicatorDot,
+              isAvailable ? styles.dotAvailable : styles.dotBooked,
+            ]}
+          />
+        </View>
 
-      <View style={styles.slotFooter}>
-        {isAvailable ? (
-          <View style={styles.availableRow}>
-            <Text style={styles.availableLabel}>Available</Text>
-            <Ionicons name="add-circle-outline" size={16} color="#0D9488" />
-          </View>
-        ) : (
-          <View style={styles.bookedRow}>
-            <Text style={styles.bookedLabel}>Booked</Text>
-            <Text style={styles.bookedPatientName} numberOfLines={1}>
-              {slot.patientName}
-            </Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+        <View style={styles.slotFooter}>
+          {isAvailable ? (
+            <View style={styles.availableRow}>
+              <Text style={styles.availableLabel}>Available</Text>
+              <Ionicons name="add-circle-outline" size={16} color="#0D9488" />
+            </View>
+          ) : (
+            <View style={styles.bookedRow}>
+              <Text style={styles.bookedLabel}>Booked</Text>
+              <Text style={styles.bookedPatientName} numberOfLines={1}>
+                {slot.patientName}
+              </Text>
+            </View>
+          )}
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  slotCard: {
+  pressableWrapper: {
     width: '48.5%',
+  },
+  slotCard: {
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
