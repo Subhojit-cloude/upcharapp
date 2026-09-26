@@ -1,5 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
 interface WaitingPatientsProps {
@@ -11,10 +16,26 @@ export const WaitingPatients: React.FC<WaitingPatientsProps> = ({
   count,
   onCallNext,
 }) => {
+  const btnScale = useSharedValue(1);
+
+  const btnAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: btnScale.value }],
+  }));
+
+  const handleBtnPressIn = useCallback(() => {
+    if (count > 0) {
+      btnScale.value = withTiming(0.94, { duration: 100 });
+    }
+  }, [count]);
+
+  const handleBtnPressOut = useCallback(() => {
+    btnScale.value = withTiming(1, { duration: 150 });
+  }, []);
+
   return (
     <View style={styles.card}>
       <View style={styles.bellIconCircle}>
-        <Ionicons name="notifications" size={18} color="#007AFF" />
+        <Ionicons name="notifications" size={18} color="#FFFFFF" />
       </View>
 
       <View style={styles.infoGroup}>
@@ -24,13 +45,22 @@ export const WaitingPatients: React.FC<WaitingPatientsProps> = ({
         </Text>
       </View>
 
-      <TouchableOpacity
+      <Pressable
         onPress={onCallNext}
+        onPressIn={handleBtnPressIn}
+        onPressOut={handleBtnPressOut}
         disabled={count <= 0}
-        style={[styles.btn, count <= 0 && styles.btnDisabled]}
       >
-        <Text style={styles.btnText}>Call Next</Text>
-      </TouchableOpacity>
+        <Animated.View
+          style={[
+            styles.btn,
+            count <= 0 && styles.btnDisabled,
+            btnAnimatedStyle,
+          ]}
+        >
+          <Text style={styles.btnText}>Call Next</Text>
+        </Animated.View>
+      </Pressable>
     </View>
   );
 };

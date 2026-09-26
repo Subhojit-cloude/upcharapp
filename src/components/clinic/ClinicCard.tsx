@@ -1,5 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Clinic } from '../../types/clinic';
 import { StatusBadge } from '../common/StatusBadge';
@@ -15,6 +20,20 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
   onPress,
   isHighlighted = false,
 }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    scale.value = withTiming(0.98, { duration: 120 });
+  }, []);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withTiming(1, { duration: 150 });
+  }, []);
+
   const renderIcon = (type: Clinic['iconType']) => {
     switch (type) {
       case 'plus':
@@ -57,69 +76,77 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.92}
+    <Pressable
       onPress={onPress}
-      style={[styles.clinicCard, isHighlighted && styles.clinicCardHighlighted]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
     >
-      {isHighlighted && <View style={styles.activeIndicatorBar} />}
+      <Animated.View
+        style={[
+          styles.clinicCard,
+          isHighlighted && styles.clinicCardHighlighted,
+          animatedStyle,
+        ]}
+      >
+        {isHighlighted && <View style={styles.activeIndicatorBar} />}
 
-      <View style={styles.clinicTopRow}>
-        {renderIcon(clinic.iconType)}
+        <View style={styles.clinicTopRow}>
+          {renderIcon(clinic.iconType)}
 
-        <View style={styles.clinicTitleGroup}>
-          <Text style={styles.clinicName} numberOfLines={1}>
-            {clinic.name}
-          </Text>
-          <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={13} color="#64748B" />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {clinic.location}
+          <View style={styles.clinicTitleGroup}>
+            <Text style={styles.clinicName} numberOfLines={1}>
+              {clinic.name}
             </Text>
-          </View>
-        </View>
-
-        <View style={styles.activeStatusWrapper}>
-          <StatusBadge label="Active" variant="active" showDot />
-          <Ionicons name="chevron-forward" size={14} color="#0D9488" style={{ marginLeft: 2 }} />
-        </View>
-      </View>
-
-      <View style={styles.tagsRow}>
-        <View style={styles.tagChip}>
-          <Text style={styles.tagChipText}>{clinic.role}</Text>
-        </View>
-
-        <View style={styles.tagChip}>
-          <Ionicons name="calendar-outline" size={13} color="#475569" style={{ marginRight: 4 }} />
-          <Text style={styles.tagChipText}>{clinic.scheduleDays}</Text>
-        </View>
-      </View>
-
-      {isHighlighted ? (
-        <View style={styles.blueSlotBanner}>
-          <View style={styles.slotBannerLeft}>
-            <Ionicons name="time-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <View>
-              <Text style={styles.blueBannerLabel}>{clinic.nextSlotLabel}</Text>
-              <Text style={styles.blueBannerTime}>{clinic.nextSlotText}</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={13} color="#64748B" />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {clinic.location}
+              </Text>
             </View>
           </View>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-        </View>
-      ) : (
-        <View style={styles.softSlotBanner}>
-          <View style={styles.slotBannerLeft}>
-            <Ionicons name="time-outline" size={16} color="#007AFF" style={{ marginRight: 8 }} />
-            <View>
-              <Text style={styles.softBannerLabel}>{clinic.nextSlotLabel}</Text>
-              <Text style={styles.softBannerTime}>{clinic.nextSlotText}</Text>
-            </View>
+
+          <View style={styles.activeStatusWrapper}>
+            <StatusBadge label="Active" variant="active" showDot />
+            <Ionicons name="chevron-forward" size={14} color="#0D9488" style={{ marginLeft: 2 }} />
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
         </View>
-      )}
-    </TouchableOpacity>
+
+        <View style={styles.tagsRow}>
+          <View style={styles.tagChip}>
+            <Text style={styles.tagChipText}>{clinic.role}</Text>
+          </View>
+
+          <View style={styles.tagChip}>
+            <Ionicons name="calendar-outline" size={13} color="#475569" style={{ marginRight: 4 }} />
+            <Text style={styles.tagChipText}>{clinic.scheduleDays}</Text>
+          </View>
+        </View>
+
+        {isHighlighted ? (
+          <View style={styles.blueSlotBanner}>
+            <View style={styles.slotBannerLeft}>
+              <Ionicons name="time-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <View>
+                <Text style={styles.blueBannerLabel}>{clinic.nextSlotLabel}</Text>
+                <Text style={styles.blueBannerTime}>{clinic.nextSlotText}</Text>
+              </View>
+            </View>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </View>
+        ) : (
+          <View style={styles.softSlotBanner}>
+            <View style={styles.slotBannerLeft}>
+              <Ionicons name="time-outline" size={16} color="#007AFF" style={{ marginRight: 8 }} />
+              <View>
+                <Text style={styles.softBannerLabel}>{clinic.nextSlotLabel}</Text>
+                <Text style={styles.softBannerTime}>{clinic.nextSlotText}</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+          </View>
+        )}
+      </Animated.View>
+    </Pressable>
   );
 };
 

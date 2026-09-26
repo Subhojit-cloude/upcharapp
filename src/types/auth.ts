@@ -37,7 +37,8 @@ export interface PatientRegistrationData {
   gender: 'male' | 'female' | 'other';
   mobileNumber: string;
   isPhoneVerified: boolean;
-  email?: string;
+  email: string;
+  password?: string;
   bloodGroup?: string;
   address?: string;
   avatarUri?: string;

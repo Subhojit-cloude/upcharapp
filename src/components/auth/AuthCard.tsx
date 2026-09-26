@@ -13,11 +13,14 @@ import { ROLE_CONFIGS } from '../../constants/roleConfig';
 
 interface AuthCardProps {
   activeRole: UserRole;
-  onSignIn: () => void;
+  /** Called with email+password when patient; or with empty strings for other roles (demo). */
+  onSignIn: (email: string, password: string) => Promise<void> | void;
   rememberDevice: boolean;
   onToggleRemember: (val: boolean) => void;
-  onForgotPassword?: () => void;
+  onForgotPassword?: (email?: string) => void;
   onAlternateIdPress?: () => void;
+  errorMessage?: string | null;
+  onError?: (error: string) => void;
 }
 
 export const AuthCard: React.FC<AuthCardProps> = ({
@@ -27,6 +30,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   onToggleRemember,
   onForgotPassword,
   onAlternateIdPress,
+  errorMessage,
+  onError,
 }) => {
   const config = ROLE_CONFIGS[activeRole];
 
@@ -34,18 +39,27 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Update pre-filled values when switching roles for instant testing
   useEffect(() => {
     setIdentifier(config.defaultEmailOrId);
+    setLocalError(null);
   }, [activeRole]);
 
-  const handlePressSignIn = () => {
+  const handlePressSignIn = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    setLocalError(null);
+    try {
+      // Pass credentials; parent decides whether to call Supabase or mock
+      await onSignIn(identifier.trim(), password);
+    } catch (err: any) {
+      const msg = err?.message || 'Sign in failed. Please try again.';
+      setLocalError(msg);
+      onError?.(msg);
+    } finally {
       setIsLoading(false);
-      onSignIn();
-    }, 400);
+    }
   };
 
   return (
@@ -84,7 +98,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       <View style={styles.fieldGroup}>
         <View style={styles.labelRow}>
           <Text style={styles.labelText}>Password</Text>
-          <TouchableOpacity activeOpacity={0.7} onPress={onForgotPassword}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => onForgotPassword?.(identifier)}>
             <Text style={styles.rightActionLink}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
@@ -160,6 +174,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           </>
         )}
       </TouchableOpacity>
+
+      {/* Inline error message */}
+      {(errorMessage || localError) ? (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
+          <Text style={styles.errorText}>{errorMessage || localError}</Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -279,5 +301,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#DC2626',
+    fontWeight: '500',
   },
 });
