@@ -26,7 +26,7 @@ export interface UserProfile {
   specialtyOrTagline?: string;
   bloodGroup?: string;
   dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: string;
   address?: string;
   isVerified?: boolean;
 }

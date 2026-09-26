@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { UserRole, UserProfile, PatientRegistrationData } from '../types/auth';
+import { DoctorRegistrationData } from '../types/doctor';
 import { DEMO_USERS } from '../constants/roleConfig';
 
 interface AuthContextType {
@@ -12,6 +13,7 @@ interface AuthContextType {
   signIn: (roleOverride?: UserRole) => void;
   signOut: () => void;
   registerPatient: (data: PatientRegistrationData) => void;
+  registerDoctor: (data: DoctorRegistrationData) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +61,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(true);
   };
 
+  const registerDoctor = (data: DoctorRegistrationData) => {
+    const regNum = data.registrationNumber || `MCI-REG-${Math.floor(10000 + Math.random() * 90000)}`;
+    const newProfile: UserProfile = {
+      id: `doc-${Date.now()}`,
+      name: data.fullLegalName,
+      role: 'doctor',
+      identifier: regNum,
+      email: data.email,
+      phone: `+91 ${data.phone}`,
+      avatarUrl:
+        data.photoUri ||
+        'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=200&q=80',
+      specialtyOrTagline: `${data.qualification || 'MD'} • ${data.primarySpecialty || 'General Medicine'} • ${data.yearsExperience || 10}+ Yrs Exp`,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+      address: `${data.hospitalName}, ${data.city}`,
+      isVerified: true,
+    };
+
+    setActiveRole('doctor');
+    setUser(newProfile);
+    setIsAuthenticated(true);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -71,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signIn,
         signOut,
         registerPatient,
+        registerDoctor,
       }}
     >
       {children}

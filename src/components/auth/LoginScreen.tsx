@@ -19,9 +19,14 @@ import { SocialAuthButtons } from './SocialAuthButtons';
 interface LoginScreenProps {
   onSuccessLogin?: () => void;
   onNavigateToRegister?: () => void;
+  onNavigateToDoctorRegister?: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccessLogin, onNavigateToRegister }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  onSuccessLogin,
+  onNavigateToRegister,
+  onNavigateToDoctorRegister,
+}) => {
   const {
     activeRole,
     setActiveRole,
@@ -122,6 +127,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccessLogin, onNavi
             onPress={() => {
               if (activeRole === 'patient' && onNavigateToRegister) {
                 onNavigateToRegister();
+              } else if (activeRole === 'doctor' && onNavigateToDoctorRegister) {
+                onNavigateToDoctorRegister();
               } else {
                 Alert.alert(
                   'Registration',

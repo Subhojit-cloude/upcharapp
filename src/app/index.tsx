@@ -16,6 +16,7 @@ import { Clinic } from '../types/clinic';
 
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { PatientRegistrationScreen } from '../components/auth/PatientRegistrationScreen';
+import { DoctorRegistrationScreen } from '../components/doctor/DoctorRegistrationScreen';
 import { RoleTopBar } from '../components/common/RoleTopBar';
 import { PatientDashboard } from '../components/patient/PatientDashboard';
 import { DoctorDashboard } from '../components/doctor/DoctorDashboard';
@@ -30,7 +31,7 @@ export default function AppEntry() {
 
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [authView, setAuthView] = useState<'login' | 'patient-register' | 'doctor-register'>('login');
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -87,7 +88,7 @@ export default function AppEntry() {
 
   // If user is not yet logged in, show the tri-role login or registration screen
   if (!isAuthenticated) {
-    if (authView === 'register') {
+    if (authView === 'patient-register') {
       return (
         <PatientRegistrationScreen
           onBackToLogin={() => setAuthView('login')}
@@ -95,9 +96,18 @@ export default function AppEntry() {
         />
       );
     }
+    if (authView === 'doctor-register') {
+      return (
+        <DoctorRegistrationScreen
+          onBackToLogin={() => setAuthView('login')}
+          onSuccessRegistration={() => setAuthView('login')}
+        />
+      );
+    }
     return (
       <LoginScreen
-        onNavigateToRegister={() => setAuthView('register')}
+        onNavigateToRegister={() => setAuthView('patient-register')}
+        onNavigateToDoctorRegister={() => setAuthView('doctor-register')}
       />
     );
   }
